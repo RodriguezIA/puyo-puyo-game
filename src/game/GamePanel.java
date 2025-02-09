@@ -211,14 +211,17 @@ public class GamePanel extends JPanel {
         if (canFall1 && canFall2) {
             currentPair.y1++;
             currentPair.y2++;
+            repaint();
             return;
         } else {
             if(canFall1){
                 currentPair.y1++;
+                repaint();
                 return;
             }
             if(canFall2){
                 currentPair.y2++;
+                repaint();
                 return;
             }
             if(!canFall1 && !canFall2){
@@ -281,15 +284,15 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Draw board
+        // Dibujar el tablero
         for (int y = 0; y < BOARD_HEIGHT; y++) {
             for (int x = 0; x < BOARD_WIDTH; x++) {
                 g.setColor(Color.GRAY);
                 g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
                 if (board[y][x] != null) {
-                    Image image = puyoImages.get(board[y][x]);
-                    if(image != null){
+                    Image image = puyoImages.get(board[y][x]); // Obtener imagen por color
+                    if (image != null) {
                         g.drawImage(image, x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
                     } else {
                         g.setColor(board[y][x]);
@@ -299,14 +302,23 @@ public class GamePanel extends JPanel {
             }
         }
 
-        // Draw current pair
+        // Dibujar el par actual (CORREGIDO)
         if (currentPair != null) {
-            g.setColor(currentPair.color1);
-            g.fillOval(currentPair.x1 * CELL_SIZE + 2, currentPair.y1 * CELL_SIZE + 2,
-                    CELL_SIZE - 4, CELL_SIZE - 4);
-            g.setColor(currentPair.color2);
-            g.fillOval(currentPair.x2 * CELL_SIZE + 2, currentPair.y2 * CELL_SIZE + 2,
-                    CELL_SIZE - 4, CELL_SIZE - 4);
+            Image image1 = puyoImages.get(currentPair.color1); // Obtener imagen por color
+            if (image1 != null) {
+                g.drawImage(image1, currentPair.x1 * CELL_SIZE + 2, currentPair.y1 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+            } else {
+                g.setColor(currentPair.color1);
+                g.fillOval(currentPair.x1 * CELL_SIZE + 2, currentPair.y1 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+            }
+
+            Image image2 = puyoImages.get(currentPair.color2); // Obtener imagen por color
+            if (image2 != null) {
+                g.drawImage(image2, currentPair.x2 * CELL_SIZE + 2, currentPair.y2 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+            } else {
+                g.setColor(currentPair.color2);
+                g.fillOval(currentPair.x2 * CELL_SIZE + 2, currentPair.y2 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+            }
         }
 
         if (gameOver) {
