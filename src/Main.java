@@ -1,9 +1,10 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-import game.GameFrame;
+import game.Frame;
 
 public class Main {
     public static void main(String[] args) {
-        new GameFrame();
+        // Iniciamos la GUI de forma segura en el hilo de eventos de Swing
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            new Frame(); // Solo creamos la instancia del Frame
+        });
     }
 }

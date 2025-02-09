@@ -27,4 +27,17 @@ public class Sphere {
     public void fall(){
         this.y += 1;
     }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public void moveRight() {
+        x++;
+    }
+
+    public void moveLeft() {
+        x--;
+    }
 }
