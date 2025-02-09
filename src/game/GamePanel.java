@@ -38,6 +38,8 @@ public class GamePanel extends JPanel {
 
         public void rotate() {
             int nextRotation = (rotationState + 1) % 4;
+            System.out.println("RotationState: " + rotationState);
+            System.out.println("NextRotationState: " + nextRotation);
 
             int newX2 = x1;
             int newY2 = y1;
@@ -65,6 +67,7 @@ public class GamePanel extends JPanel {
             if(isValidPosition(newX2, newY2)){
                 x2 = newX2;
                 y2 = newY2;
+                rotationState = nextRotation;
             }
 
             // verificacion si la rotacion golpe la derecha del panel
@@ -157,6 +160,19 @@ public class GamePanel extends JPanel {
     private boolean canMove(int dx) {
         int newX1 = currentPair.x1 + dx;
         int newX2 = currentPair.x2 + dx;
+
+        // Si las esferas están a diferentes alturas, solo mover la que no ha colisionado
+        if (currentPair.y1 != currentPair.y2) {
+            if (currentPair.y1 < currentPair.y2) {
+                // La primera esfera está más arriba, solo mover esa
+                return newX1 >= 0 && newX1 < BOARD_WIDTH && board[currentPair.y1][newX1] == null;
+            } else {
+                // La segunda esfera está más arriba, solo mover esa
+                return newX2 >= 0 && newX2 < BOARD_WIDTH && board[currentPair.y2][newX2] == null;
+            }
+        }
+
+        // Si están a la misma altura, verificar ambas
         return newX1 >= 0 && newX1 < BOARD_WIDTH && newX2 >= 0 && newX2 < BOARD_WIDTH
                 && board[currentPair.y1][newX1] == null
                 && board[currentPair.y2][newX2] == null;
@@ -173,13 +189,33 @@ public class GamePanel extends JPanel {
             }
         }
 
-        if (canFall(currentPair.x1, currentPair.y1) && canFall(currentPair.x2, currentPair.y2)) {
+        boolean canFall1 = canFall(currentPair.x1, currentPair.y1);
+        boolean canFall2 = canFall(currentPair.x2, currentPair.y2);
+
+        if (canFall1 && canFall2) {
             currentPair.y1++;
             currentPair.y2++;
+            return;
         } else {
-            placePuyo();
-            checkMatches();
-            currentPair = null;
+            if(canFall1){
+                currentPair.y1++;
+                return;
+            }
+            if(canFall2){
+                currentPair.y2++;
+                return;
+            }
+            if(!canFall1 && !canFall2){
+                if (isValidPosition(currentPair.x1, currentPair.y1) || board[currentPair.y1][currentPair.x1] == null) {
+                    board[currentPair.y1][currentPair.x1] = currentPair.color1;
+                }
+                if (isValidPosition(currentPair.x2, currentPair.y2) || board[currentPair.y2][currentPair.x2] == null) {
+                    board[currentPair.y2][currentPair.x2] = currentPair.color2;
+                }
+                placePuyo();
+                checkMatches();
+                currentPair = null;
+            }
         }
     }
 
@@ -192,8 +228,15 @@ public class GamePanel extends JPanel {
     }
 
     private void placePuyo() {
-        board[currentPair.y1][currentPair.x1] = currentPair.color1;
-        board[currentPair.y2][currentPair.x2] = currentPair.color2;
+        // Verificar que las posiciones son válidas antes de colocar
+        if (currentPair.y1 >= 0 && currentPair.y1 < BOARD_HEIGHT &&
+                currentPair.x1 >= 0 && currentPair.x1 < BOARD_WIDTH) {
+            board[currentPair.y1][currentPair.x1] = currentPair.color1;
+        }
+        if (currentPair.y2 >= 0 && currentPair.y2 < BOARD_HEIGHT &&
+                currentPair.x2 >= 0 && currentPair.x2 < BOARD_WIDTH) {
+            board[currentPair.y2][currentPair.x2] = currentPair.color2;
+        }
     }
 
     private void checkMatches() {
