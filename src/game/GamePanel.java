@@ -20,6 +20,7 @@ public class GamePanel extends JPanel {
     private class Puyo {
         int x1, y1; // First sphere
         int x2, y2; // Second sphere
+        int rotationState = 0; // 0: derecha, 1: abajo, 2: izquierda 3: arriba
         Color color1, color2;
 
         public Puyo() {
@@ -36,15 +37,66 @@ public class GamePanel extends JPanel {
         }
 
         public void rotate() {
-            // Calculate new position after rotation
-            int newX2 = x1 - (y2 - y1);
-            int newY2 = y1 + (x2 - x1);
+            int nextRotation = (rotationState + 1) % 4;
 
-            // Check if rotation is valid
-            if (newX2 >= 0 && newX2 < BOARD_WIDTH && newY2 >= 0 && newY2 < BOARD_HEIGHT
-                    && board[newY2][newX2] == null) {
+            int newX2 = x1;
+            int newY2 = y1;
+
+            switch (nextRotation){
+                case 0:
+                    newX2 = x1 + 1;
+                    newY2 = y1;
+                    break;
+                case 1:
+                    newX2 = x1;
+                    newY2 = y1 + 1;
+                    break;
+                case 2:
+                    newX2 = x1 - 1;
+                    newY2 = y1;
+                    break;
+                case 3:
+                    newX2 = x1;
+                    newY2 = y1 - 1;
+                    break;
+            }
+
+            // verificar si la rotacion es valida
+            if(isValidPosition(newX2, newY2)){
                 x2 = newX2;
                 y2 = newY2;
+            }
+
+            // verificacion si la rotacion golpe la derecha del panel
+            if(newX2 >= BOARD_WIDTH){
+                if(isValidPosition(x1 - 1, y1) && isValidPosition(newX2 - 1, newY2 )){
+                    x1--;
+                    x2 = newX2 - 1;
+                    y2 = newY2;
+                    rotationState = nextRotation;
+                    return;
+                }
+            }
+
+            // verificacion si la rotacion golpe la izquierda del panel
+            if(newX2 < 0){
+                if(isValidPosition(x1 + 1, y1) && isValidPosition(newX2 + 1, newY2 )){
+                    x1++;
+                    x2 = newX2 + 1;
+                    y2 = newY2;
+                    rotationState = nextRotation;
+                    return;
+                }
+            }
+
+            // si el puyo golpea el suelo u otro elemento intnetar subir
+            if (newY2 >= BOARD_HEIGHT || (newY2 >= 0 && board[newY2][newX2] != null)) {
+                if (y1 > 0 && isValidPosition(x1, y1 - 1) && isValidPosition(newX2, newY2 - 1)) {
+                    y1--;
+                    x2 = newX2;
+                    y2 = newY2 - 1;
+                    rotationState = nextRotation;
+                }
             }
         }
     }
@@ -89,7 +141,7 @@ public class GamePanel extends JPanel {
                                 currentPair.x2++;
                             }
                             break;
-                        case KeyEvent.VK_UP:
+                        case KeyEvent.VK_Z:
                             currentPair.rotate();
                             break;
                         case KeyEvent.VK_DOWN:
