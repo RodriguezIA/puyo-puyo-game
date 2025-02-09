@@ -1,8 +1,12 @@
 package game;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Random;
 
 public class GamePanel extends JPanel {
@@ -15,6 +19,8 @@ public class GamePanel extends JPanel {
     private Puyo currentPair;  // Declaración de currentPair
     private boolean gameOver;
     private Timer timer;
+
+    private HashMap<Color, Image> puyoImages = new HashMap<>();
 
     // Clase interna Puyo
     private class Puyo {
@@ -38,8 +44,6 @@ public class GamePanel extends JPanel {
 
         public void rotate() {
             int nextRotation = (rotationState + 1) % 4;
-            System.out.println("RotationState: " + rotationState);
-            System.out.println("NextRotationState: " + nextRotation);
 
             int newX2 = x1;
             int newY2 = y1;
@@ -109,6 +113,19 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(BOARD_WIDTH * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE));
         setupGame();
         setupControls();
+        loadImages();
+    }
+
+    private void loadImages() {
+        try {
+            puyoImages.put(Color.RED, ImageIO.read(new File("src/assets/puyo_red.png")));
+            puyoImages.put(Color.BLUE, ImageIO.read(new File("src/assets/puyo_blue.png")));
+            puyoImages.put(Color.GREEN, ImageIO.read(new File("src/assets/puyo_green.png")));
+            puyoImages.put(Color.YELLOW, ImageIO.read(new File("src/assets/puyo_yellow.png")));
+        } catch (IOException e) {
+            System.err.println("Error al cargar las imágenes: " + e.getMessage());
+            // Manejar el error, por ejemplo, usando imágenes por defecto o cerrando el juego
+        }
     }
 
     private void setupGame() {
@@ -181,8 +198,7 @@ public class GamePanel extends JPanel {
     private void moveDown() {
         if (currentPair == null) {
             currentPair = new Puyo();
-            if (!isValidPosition(currentPair.x1, currentPair.y1) ||
-                    !isValidPosition(currentPair.x2, currentPair.y2)) {
+            if (!isValidPosition(currentPair.x1, currentPair.y1) || !isValidPosition(currentPair.x2, currentPair.y2)) {
                 gameOver = true;
                 timer.stop();
                 return;
@@ -206,12 +222,13 @@ public class GamePanel extends JPanel {
                 return;
             }
             if(!canFall1 && !canFall2){
-                if (isValidPosition(currentPair.x1, currentPair.y1) || board[currentPair.y1][currentPair.x1] == null) {
+                if (isValidPosition(currentPair.x1, currentPair.y1) && board[currentPair.y1][currentPair.x1] == null) {
                     board[currentPair.y1][currentPair.x1] = currentPair.color1;
                 }
-                if (isValidPosition(currentPair.x2, currentPair.y2) || board[currentPair.y2][currentPair.x2] == null) {
+                if (isValidPosition(currentPair.x2, currentPair.y2) && board[currentPair.y2][currentPair.x2] == null) {
                     board[currentPair.y2][currentPair.x2] = currentPair.color2;
                 }
+
                 placePuyo();
                 checkMatches();
                 currentPair = null;
@@ -240,8 +257,25 @@ public class GamePanel extends JPanel {
     }
 
     private void checkMatches() {
-        // TODO: Implementar lógica de coincidencias
+        // TODO: Implementar lógica de
+        printBoard();
     }
+
+    private void printBoard() {
+        System.out.println("Current Board State:");
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                if (board[y][x] == null) {
+                    System.out.print(" . ");
+                } else {
+                    System.out.print(" X ");  // Puedes usar diferentes letras para los colores
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -254,8 +288,13 @@ public class GamePanel extends JPanel {
                 g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
                 if (board[y][x] != null) {
-                    g.setColor(board[y][x]);
-                    g.fillOval(x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    Image image = puyoImages.get(board[y][x]);
+                    if(image != null){
+                        g.drawImage(image, x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+                    } else {
+                        g.setColor(board[y][x]);
+                        g.fillOval(x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                    }
                 }
             }
         }
@@ -273,7 +312,11 @@ public class GamePanel extends JPanel {
         if (gameOver) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 30));
-            g.drawString("Game Over!", getWidth() / 4, getHeight() / 2);
+            String message = "Game Over!";
+            FontMetrics fm = g.getFontMetrics();
+            int x = (getWidth() - fm.stringWidth(message)) / 2;
+            int y = getHeight() / 2;
+            g.drawString(message, x, y);
         }
     }
 }
