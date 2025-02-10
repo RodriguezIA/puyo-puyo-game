@@ -1,9 +1,3 @@
-Basado en el código proporcionado, crearé un README.md completo en español para tu proyecto de Puyo Puyo.
-
-
-
-
-
 # Puyo Puyo - Juego en Java
 
 ## Descripción
@@ -17,9 +11,34 @@ Este proyecto es una implementación del clásico juego Puyo Puyo en Java, utili
 - Controles intuitivos mediante teclado
 - Soporte para imágenes personalizadas de puyos
 
-## Requisitos del Sistema
-- Java Development Kit (JDK) 8 o superior
-- Sistema operativo compatible con Java (Windows, Linux, macOS)
+
+## Compatibilidad y Compilación
+
+### Versión de Desarrollo
+- **Entorno de Desarrollo**: OpenJDK 23
+- **Herramienta de Compilación**: javac
+
+
+### Compilación para Diferentes Versiones de Java
+
+
+```bash
+# Compilación básica
+javac -source 8 -target 8 src/game/*.java
+
+# Compilación con versiones específicas
+javac --release 8 -d bin src/game/*.java
+```
+
+#### Matriz de Compatibilidad
+
+| Versión de Java | Comando de Compilación |
+|----------------|------------------------|
+| Java 8         | `javac --release 8`    | 
+| Java 11        | `javac --release 11`   | 
+| Java 17        | `javac --release 17`   |
+| Java 21        | `javac --release 21`   | 
+| Java 23        | `javac`    |
 
 ## Estructura del Proyecto
 El proyecto está organizado en los siguientes archivos principales:
@@ -31,33 +50,37 @@ El proyecto está organizado en los siguientes archivos principales:
 - `Puyo.java`: Define el comportamiento de los pares de puyos
 - `Constants.java`: Contiene las constantes globales del juego
 
-## Controles
-- **Flecha Izquierda**: Mover el par de puyos a la izquierda
-- **Flecha Derecha**: Mover el par de puyos a la derecha
-- **Flecha Abajo**: Acelerar la caída
-- **Tecla Z**: Rotar el par de puyos
+## Controles Detallados
+
+### Movimiento Horizontal
+- **Flecha Izquierda**: Mueve el par de puyos un espacio hacia la izquierda
+    - Solo se puede mover si no hay obstáculos
+    - Respeta los límites del tablero
+
+- **Flecha Derecha**: Mueve el par de puyos un espacio hacia la derecha
+    - Solo se puede mover si no hay obstáculos
+    - Respeta los límites del tablero
+
+### Caída y Velocidad
+- **Flecha Abajo**: Acelera la caída del par de puyos
+    - Aumenta la velocidad de descenso
+    - Útil para posicionar rápidamente los puyos
+
+### Rotación
+- **Tecla Z**: Rota el par de puyos en sentido horario
+    - La rotación respeta los límites del tablero
+    - Si la rotación no es posible en la posición actual, el juego intentará ajustar la posición
+    - Permite rotar incluso cuando un puyo ya ha colisionado
 
 ## Instalación y Ejecución
-
-1. Clona el repositorio:
-```bash
-git clone [URL_DEL_REPOSITORIO]
-```
-
-2. Navega al directorio del proyecto:
-```bash
-cd puyo-puyo
-```
-
-3. Compila el proyecto:
-```bash
-javac -d bin src/game/*.java
-```
-
-4. Ejecuta el juego:
-```bash
-java -cp bin game.Main
-```
+1. Compila el proyecto:
+   ```bash
+   javac -d bin src/game/*.java
+   ```
+2. Ejecuta el juego:
+   ```bash
+   java -cp bin game.Main
+   ```
 
 ## Mecánicas del Juego
 - Los puyos caen en pares desde la parte superior del tablero
@@ -66,32 +89,44 @@ java -cp bin game.Main
 - Los puyos superiores caerán cuando hay espacios vacíos debajo
 - El juego termina cuando los puyos alcanzan la parte superior del tablero
 
-## Personalización
-El juego permite personalizar varios aspectos:
-- Tamaño del tablero (modificando `Constants.java`)
-- Colores de los puyos
-- Imágenes de los puyos (ubicadas en `src/assets/`)
-- Velocidad de caída (ajustando el temporizador en `GamePanel.java`)
+## Limitaciones Actuales
 
-## Contribución
-Si deseas contribuir al proyecto:
-1. Haz un fork del repositorio
-2. Crea una rama para tu función: `git checkout -b nueva-funcion`
-3. Realiza tus cambios y haz commit: `git commit -m 'Agrega nueva función'`
-4. Empuja los cambios a tu fork: `git push origin nueva-funcion`
-5. Crea un Pull Request
+### Reinicio de Partida
+- **Problema**: No existe un botón o método para reiniciar el juego después de Game Over
+- **Comportamiento Actual**: Una vez que el juego termina, el usuario debe cerrar y volver a abrir la aplicación
+- **Impacto**: Reduce la experiencia de juego y la usabilidad
 
-## Licencia
-[Especifica la licencia de tu proyecto]
+### Sistema de Puntuación
+- **Problema**: Ausencia de un sistema de puntuación
+- **Carencias Actuales**:
+    - No se registran puntos por eliminación de grupos
+    - Sin contador de puyos eliminados
+    - Falta de progresión o desafío para el jugador
 
-## Contacto
-[Tu información de contacto]
+## Bugs Conocidos y Comportamientos Inesperados
+
+### Problemas de Caída y Colisión
+1. **Separación Vertical de Puyos**
+    - **Descripción**: En algunas situaciones, los puyos de un mismo par pueden separarse verticalmente
+    - **Efecto**: Un puyo puede quedar en una posición diferente a su par original
+    - **Posible Causa**: Inconsistencias en el algoritmo de caída y detección de colisiones
+
+2. **Control de Par Después de Colisión Parcial**
+    - **Descripción**: Si un puyo de un par ya ha colisionado, aún se puede controlar el par completo
+    - **Efecto**: Permite movimientos y rotaciones que podrían no se deberían permitir
+    - **Ejemplo**: Rotar un par donde un puyo ya ha tocado otro objeto o el fondo
+
+3. **Eliminación Inesperada de Puyos**
+    - **Descripción**: Puyos de un color diferente pueden ser eliminados junto con un grupo grande
+    - **Efecto**: Pérdida no intencional de puyos que no forman parte del grupo de 4 o más
+    - **Posible Causa**: Problemas en el algoritmo de búsqueda de grupos
 
 
-He creado un README.md completo para tu proyecto. Incluye todas las secciones importantes como descripción, características, requisitos, controles, instalación y más.
 
-¿Te gustaría que ajuste o agregue alguna sección específica? Por ejemplo, podríamos:
-- Agregar más detalles sobre alguna característica específica
-- Incluir capturas de pantalla del juego
-- Expandir la sección de personalización
-- Agregar información sobre pruebas o debugging
+## Algoritmos
+- **Búsqueda de Grupos**: Algoritmo para establecer las coincidencias de los grupos de colores
+- - <img src="./Docs/assets/diagrama%20busqueda.png" alt="Descripción" width="100%"/>
+- **Búsqueda en Anchura (BFS)**: Algoritmo utilizado para encontrar grupos de puyos del mismo color
+- - <img src="./Docs/assets/diagrama%20BFS.png" alt="Descripción" width="100%"/>
+    
+

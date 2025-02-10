@@ -152,8 +152,10 @@ public class GamePanel extends JPanel {
 
         Color[][] grid = board.getGrid();
         // Verifica si cada esfera del par puede caer hacia abajo
-        boolean canFall1 = board.canFall(currentPair.x1, currentPair.y1);
-        boolean canFall2 = board.canFall(currentPair.x2, currentPair.y2);
+//        boolean canFall1 = board.canFall(currentPair.x1, currentPair.y1);
+//        boolean canFall2 = board.canFall(currentPair.x2, currentPair.y2);
+        boolean canFall1 = canPuyoFall(currentPair.x1, currentPair.y1, currentPair.x2, currentPair.y2);
+        boolean canFall2 = canPuyoFall(currentPair.x2, currentPair.y2, currentPair.x1, currentPair.y1);
 
         if (canFall1 && canFall2) {
             // Si ambas esferas pueden caer, se incrementa la coordenada y de ambas
@@ -179,6 +181,22 @@ public class GamePanel extends JPanel {
             board.checkMatches();
             currentPair = null;
         }
+    }
+
+    /**
+     *
+     * Verifica si la celda de abajo está ocupada por el grid o por otro puyo del par
+     *
+     * @param x1 Cordenada x del primer puyo
+     * @param y1 Cordenada y del primer puyo
+     * @param x2 Cordenada x del segundo puyo
+     * @param y2 Cordenada y del segundo puyo
+     */
+    private boolean canPuyoFall(int x1, int y1, int x2, int y2){
+        if(y1 + 1 >= Constants.BOARD_HEIGHT){
+            return false;
+        }
+        return board.getGrid()[y1 + 1][x1] == null && !(x1 ==x2 && y1 + 1 == y2);
     }
 
     /**
