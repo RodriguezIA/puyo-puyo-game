@@ -9,110 +9,32 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-
+/**
+ * Clase GamePanel que extiende JPanel y se encarga de administrar la lógica y el renderizado del juego.
+ * Esta clase gestiona el tablero, el movimiento de los puyos, los controles de teclado y el dibujo en pantalla.
+ */
 public class GamePanel extends JPanel {
-
-    private Color[][] board;
-    private Puyo currentPair;  // Declaración de currentPair
+    private Board board;
+    private Puyo currentPair;
     private boolean gameOver;
     private Timer timer;
-
     private HashMap<Color, Image> puyoImages = new HashMap<>();
 
-    // Clase interna Puyo
-    private class Puyo {
-        int x1, y1; // First sphere
-        int x2, y2; // Second sphere
-        int rotationState = 0; // 0: derecha, 1: abajo, 2: izquierda 3: arriba
-        Color color1, color2;
-
-        public Puyo() {
-            // Start position at top center
-            x1 = Constants.BOARD_WIDTH / 2 - 1;
-            y1 = 0;
-            x2 = Constants.BOARD_WIDTH / 2;
-            y2 = 0;
-
-            // Random colors
-            Random rand = new Random();
-            color1 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
-            color2 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
-        }
-
-        public void rotate() {
-            int nextRotation = (rotationState + 1) % 4;
-
-            int newX2 = x1;
-            int newY2 = y1;
-
-            switch (nextRotation){
-                case 0:
-                    newX2 = x1 + 1;
-                    newY2 = y1;
-                    break;
-                case 1:
-                    newX2 = x1;
-                    newY2 = y1 + 1;
-                    break;
-                case 2:
-                    newX2 = x1 - 1;
-                    newY2 = y1;
-                    break;
-                case 3:
-                    newX2 = x1;
-                    newY2 = y1 - 1;
-                    break;
-            }
-
-            // verificar si la rotacion es valida
-            if(isValidPosition(newX2, newY2)){
-                x2 = newX2;
-                y2 = newY2;
-                rotationState = nextRotation;
-            }
-
-            // verificacion si la rotacion golpe la derecha del panel
-            if(newX2 >= Constants.BOARD_WIDTH){
-                if(isValidPosition(x1 - 1, y1) && isValidPosition(newX2 - 1, newY2 )){
-                    x1--;
-                    x2 = newX2 - 1;
-                    y2 = newY2;
-                    rotationState = nextRotation;
-                    return;
-                }
-            }
-
-            // verificacion si la rotacion golpe la izquierda del panel
-            if(newX2 < 0){
-                if(isValidPosition(x1 + 1, y1) && isValidPosition(newX2 + 1, newY2 )){
-                    x1++;
-                    x2 = newX2 + 1;
-                    y2 = newY2;
-                    rotationState = nextRotation;
-                    return;
-                }
-            }
-
-            // si el puyo golpea el suelo u otro elemento intnetar subir
-            if (newY2 >= Constants.BOARD_HEIGHT || (newY2 >= 0 && board[newY2][newX2] != null)) {
-                if (y1 > 0 && isValidPosition(x1, y1 - 1) && isValidPosition(newX2, newY2 - 1)) {
-                    y1--;
-                    x2 = newX2;
-                    y2 = newY2 - 1;
-                    rotationState = nextRotation;
-                }
-            }
-        }
-    }
 
     public GamePanel() {
-        board = new Color[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
-        setPreferredSize(new Dimension(Constants.BOARD_WIDTH * Constants.CELL_SIZE, Constants.BOARD_HEIGHT * Constants.CELL_SIZE));
+        board = new Board();
+        // Se establece el tamaño del panel basado en el ancho, alto y tamaño de cada celda definidos en Constants
+        setPreferredSize(new Dimension(Constants.BOARD_WIDTH * Constants.CELL_SIZE,
+                Constants.BOARD_HEIGHT * Constants.CELL_SIZE));
         setupGame();
         setupControls();
         loadImages();
     }
 
+    /**
+     * Carga las imágenes de los puyos desde archivos.
+     * Si ocurre algún error, se muestra un mensaje en la consola.
+     */
     private void loadImages() {
         try {
             puyoImages.put(Color.RED, ImageIO.read(new File("src/assets/puyo_red.png")));
@@ -121,15 +43,19 @@ public class GamePanel extends JPanel {
             puyoImages.put(Color.YELLOW, ImageIO.read(new File("src/assets/puyo_yellow.png")));
         } catch (IOException e) {
             System.err.println("Error al cargar las imágenes: " + e.getMessage());
-            // Manejar el error, por ejemplo, usando imágenes por defecto o cerrando el juego
         }
     }
 
+    /**
+     * Configura el estado inicial del juego.
+     * Inicializa el tablero, el par actual de puyos y el temporizador que controla el movimiento.
+     */
     private void setupGame() {
         gameOver = false;
-        board = new Color[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
+        board = new Board();
         currentPair = null;
 
+        // Crea un temporizador que cada 1000 ms (1 segundo) ejecuta el movimiento hacia abajo
         timer = new Timer(1000, e -> {
             if (!gameOver) {
                 moveDown();
@@ -139,29 +65,38 @@ public class GamePanel extends JPanel {
         timer.start();
     }
 
+    /**
+     * Configura los controles de teclado.
+     * Se añade un KeyAdapter para gestionar los eventos de teclado y mover o rotar el par de puyos.
+     */
     private void setupControls() {
         setFocusable(true);
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (!gameOver && currentPair != null) {
+                    // Procesa la tecla presionada
                     switch (e.getKeyCode()) {
                         case KeyEvent.VK_LEFT:
+                            // Mueve el par hacia la izquierda si es posible
                             if (canMove(-1)) {
                                 currentPair.x1--;
                                 currentPair.x2--;
                             }
                             break;
                         case KeyEvent.VK_RIGHT:
+                            // Mueve el par hacia la derecha si es posible
                             if (canMove(1)) {
                                 currentPair.x1++;
                                 currentPair.x2++;
                             }
                             break;
                         case KeyEvent.VK_Z:
-                            currentPair.rotate();
+                            // Rota el par de puyos usando la grilla actual para validar la rotación
+                            currentPair.rotate(board.getGrid());
                             break;
                         case KeyEvent.VK_DOWN:
+                            // Fuerza el movimiento hacia abajo
                             moveDown();
                             break;
                     }
@@ -171,211 +106,149 @@ public class GamePanel extends JPanel {
         });
     }
 
+    /**
+     * Verifica si el par actual se puede mover horizontalmente en la dirección indicada.
+     *
+     * @param dx El desplazamiento horizontal (-1 para izquierda, 1 para derecha).
+     * @return true si el movimiento es válido; false en caso contrario.
+     */
     private boolean canMove(int dx) {
         int newX1 = currentPair.x1 + dx;
         int newX2 = currentPair.x2 + dx;
+        Color[][] grid = board.getGrid();
 
-        // Si las esferas están a diferentes alturas, solo mover la que no ha colisionado
+        // Si las esferas están en alturas diferentes, se mueve la que está más arriba (la que aún no ha colisionado)
         if (currentPair.y1 != currentPair.y2) {
             if (currentPair.y1 < currentPair.y2) {
-                // La primera esfera está más arriba, solo mover esa
-                return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH && board[currentPair.y1][newX1] == null;
+                return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH && grid[currentPair.y1][newX1] == null;
             } else {
-                // La segunda esfera está más arriba, solo mover esa
-                return newX2 >= 0 && newX2 < Constants.BOARD_WIDTH && board[currentPair.y2][newX2] == null;
+                return newX2 >= 0 && newX2 < Constants.BOARD_WIDTH && grid[currentPair.y2][newX2] == null;
             }
         }
 
-        // Si están a la misma altura, verificar ambas
-        return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH && newX2 >= 0 && newX2 < Constants.BOARD_WIDTH
-                && board[currentPair.y1][newX1] == null
-                && board[currentPair.y2][newX2] == null;
+        // Si ambas esferas están a la misma altura, se verifican ambas posiciones
+        return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH &&
+                newX2 >= 0 && newX2 < Constants.BOARD_WIDTH &&
+                grid[currentPair.y1][newX1] == null &&
+                grid[currentPair.y2][newX2] == null;
     }
 
+    /**
+     * Mueve el par actual de puyos hacia abajo.
+     * Si el par no puede seguir cayendo, se coloca en el tablero, se verifican las coincidencias y se prepara el siguiente par.
+     */
     private void moveDown() {
+        // Si no existe un par actual, se crea uno nuevo
         if (currentPair == null) {
             currentPair = new Puyo();
-            if (!isValidPosition(currentPair.x1, currentPair.y1) || !isValidPosition(currentPair.x2, currentPair.y2)) {
+            // Si la posición inicial ya está ocupada, termina el juego
+            if (!board.isValidPosition(currentPair.x1, currentPair.y1) ||
+                    !board.isValidPosition(currentPair.x2, currentPair.y2)) {
                 gameOver = true;
                 timer.stop();
                 return;
             }
         }
 
-        boolean canFall1 = canFall(currentPair.x1, currentPair.y1);
-        boolean canFall2 = canFall(currentPair.x2, currentPair.y2);
+        Color[][] grid = board.getGrid();
+        // Verifica si cada esfera del par puede caer hacia abajo
+        boolean canFall1 = board.canFall(currentPair.x1, currentPair.y1);
+        boolean canFall2 = board.canFall(currentPair.x2, currentPair.y2);
 
         if (canFall1 && canFall2) {
+            // Si ambas esferas pueden caer, se incrementa la coordenada y de ambas
             currentPair.y1++;
             currentPair.y2++;
             repaint();
             return;
         } else {
-            if(canFall1){
+            // Si solo una de las esferas puede caer, se mueve esa esfera
+            if (canFall1) {
                 currentPair.y1++;
                 repaint();
                 return;
             }
-            if(canFall2){
+            if (canFall2) {
                 currentPair.y2++;
                 repaint();
                 return;
             }
-            if(!canFall1 && !canFall2){
-                placePuyo();
-                checkMatches();
-                currentPair = null;
-            }
+            // Si ninguna esfera puede caer, se coloca el par en el tablero,
+            // se verifican las coincidencias y se prepara el siguiente par
+            board.placePuyo(currentPair);
+            board.checkMatches();
+            currentPair = null;
         }
     }
 
-    private boolean canFall(int x, int y) {
-        return y + 1 < Constants.BOARD_HEIGHT && board[y + 1][x] == null;
-    }
-
-    private boolean isValidPosition(int x, int y) {
-        return x >= 0 && x < Constants.BOARD_WIDTH && y >= 0 && y < Constants.BOARD_HEIGHT && board[y][x] == null;
-    }
-
-    private void placePuyo() {
-        // Verificar que las posiciones son válidas antes de colocar
-        if (isValidPosition(currentPair.x1, currentPair.y1) && board[currentPair.y1][currentPair.x1] == null) {
-            board[currentPair.y1][currentPair.x1] = currentPair.color1;
-        }
-        if (isValidPosition(currentPair.x2, currentPair.y2) && board[currentPair.y2][currentPair.x2] == null) {
-            board[currentPair.y2][currentPair.x2] = currentPair.color2;
-        }
-    }
-
-    private void checkMatches() {
-        printBoard();
-        Set<Point> matchedPuyos = new HashSet<>();
-        boolean[][] visited = new boolean[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
-
-        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
-            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
-                if (board[y][x] != null && !visited[y][x]) {
-                    Color currentColor = board[y][x];
-                    Set<Point> currentGroup = new HashSet<>();
-                    Queue<Point> queue = new LinkedList<>();
-                    queue.add(new Point(x, y));
-                    visited[y][x] = true;
-
-                    while (!queue.isEmpty()) {
-                        Point p = queue.poll();
-                        currentGroup.add(p);
-
-                        // Explorar en todas las direcciones (arriba, abajo, izquierda, derecha)
-                        // Arriba
-                        checkAdjacent(p.x, p.y - 1, currentColor, visited, queue);
-                        // Abajo
-                        checkAdjacent(p.x, p.y + 1, currentColor, visited, queue);
-                        // Izquierda
-                        checkAdjacent(p.x - 1, p.y, currentColor, visited, queue);
-                        // Derecha
-                        checkAdjacent(p.x + 1, p.y, currentColor, visited, queue);
-                    }
-
-                    if (currentGroup.size() >= 4) {
-                        matchedPuyos.addAll(currentGroup);
-                    }
-                }
-            }
-        }
-
-        // Eliminar Puyos coincidentes y aplicar gravedad
-        if (!matchedPuyos.isEmpty()) {
-            for (Point p : matchedPuyos) {
-                board[p.y][p.x] = null;
-            }
-            applyGravity();
-            checkMatches(); // Verificar nuevas coincidencias después de aplicar gravedad
-        }
-    }
-
-    private void checkAdjacent(int x, int y, Color targetColor, boolean[][] visited, Queue<Point> queue) {
-        if (x >= 0 && x < Constants.BOARD_WIDTH && y >= 0 && y < Constants.BOARD_HEIGHT) {
-            if (!visited[y][x] && board[y][x] == targetColor) {
-                visited[y][x] = true;
-                queue.add(new Point(x, y));
-            }
-        }
-    }
-
-    private void applyGravity() {
-        for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
-            int emptySpace = 0;
-            // Recorrer de abajo hacia arriba
-            for (int y = Constants.BOARD_HEIGHT - 1; y >= 0; y--) {
-                if (board[y][x] == null) {
-                    emptySpace++;
-                } else if (emptySpace > 0) {
-                    // Mover el Puyo hacia abajo
-                    board[y + emptySpace][x] = board[y][x];
-                    board[y][x] = null;
-                }
-            }
-        }
-        repaint();
-    }
-
-    private void printBoard() {
-        System.out.println("Current Board State:");
-        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
-            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
-                if (board[y][x] == null) {
-                    System.out.print(" . ");
-                } else {
-                    System.out.print(" X ");  // Puedes usar diferentes letras para los colores
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
-
-
+    /**
+     * Método de renderizado del panel.
+     * Se encarga de dibujar la grilla del tablero, los puyos colocados y el par actual.
+     *
+     * @param g El objeto Graphics utilizado para dibujar.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        Color[][] grid = board.getGrid();
 
-        // Dibujar el tablero
+
         for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
             for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
                 g.setColor(Color.GRAY);
-                g.drawRect(x * Constants.CELL_SIZE, y * Constants.CELL_SIZE, Constants.CELL_SIZE, Constants.CELL_SIZE);
+                g.drawRect(x * Constants.CELL_SIZE, y * Constants.CELL_SIZE,
+                           Constants.CELL_SIZE, Constants.CELL_SIZE);
+            }
+        }
 
-                if (board[y][x] != null) {
-                    Image image = puyoImages.get(board[y][x]); // Obtener imagen por color
+
+        // Dibujar los puyos que ya están colocados en la grilla
+        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
+            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
+                if (grid[y][x] != null) {
+                    Image image = puyoImages.get(grid[y][x]);
                     if (image != null) {
-                        g.drawImage(image, x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
+                        g.drawImage(image, x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2,
+                                Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
                     } else {
-                        g.setColor(board[y][x]);
-                        g.fillOval(x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
+                        g.setColor(grid[y][x]);
+                        g.fillOval(x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2,
+                                Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
                     }
                 }
             }
         }
 
-        // Dibujar el par actual (CORREGIDO)
+        // Dibujar el par actual de puyos (el que se encuentra en movimiento)
         if (currentPair != null) {
-            Image image1 = puyoImages.get(currentPair.color1); // Obtener imagen por color
+            // Dibujar la primera esfera
+            Image image1 = puyoImages.get(currentPair.color1);
             if (image1 != null) {
-                g.drawImage(image1, currentPair.x1 * Constants.CELL_SIZE + 2, currentPair.y1 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
+                g.drawImage(image1, currentPair.x1 * Constants.CELL_SIZE + 2,
+                        currentPair.y1 * Constants.CELL_SIZE + 2,
+                        Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
             } else {
                 g.setColor(currentPair.color1);
-                g.fillOval(currentPair.x1 * Constants.CELL_SIZE + 2, currentPair.y1 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
+                g.fillOval(currentPair.x1 * Constants.CELL_SIZE + 2,
+                        currentPair.y1 * Constants.CELL_SIZE + 2,
+                        Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
             }
 
-            Image image2 = puyoImages.get(currentPair.color2); // Obtener imagen por color
+            // Dibujar la segunda esfera
+            Image image2 = puyoImages.get(currentPair.color2);
             if (image2 != null) {
-                g.drawImage(image2, currentPair.x2 * Constants.CELL_SIZE + 2, currentPair.y2 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
+                g.drawImage(image2, currentPair.x2 * Constants.CELL_SIZE + 2,
+                        currentPair.y2 * Constants.CELL_SIZE + 2,
+                        Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
             } else {
                 g.setColor(currentPair.color2);
-                g.fillOval(currentPair.x2 * Constants.CELL_SIZE + 2, currentPair.y2 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
+                g.fillOval(currentPair.x2 * Constants.CELL_SIZE + 2,
+                        currentPair.y2 * Constants.CELL_SIZE + 2,
+                        Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
             }
         }
 
+        // Mostrar mensaje de "Game Over" si el juego ha finalizado
         if (gameOver) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 30));

@@ -2,24 +2,32 @@ package game;
 
 import javax.swing.*;
 
+/**
+ * Clase Frame que extiende de JFrame y representa la ventana principal del juego.
+ * Aquí se configura la ventana.
+ */
 public class Frame extends JFrame {
-    public Frame() {
-        super("Puyo Puyo"); // Establecemos el título directamente
 
-        // Configuración de la ventana
+
+    public Frame() {
+        //establecemos el título de la ventana.
+        super("Puyo Puyo");
+
+        // - Al cerrar la ventana, se termina la ejecución de la aplicación.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Agregamos el panel del juego
+
         GamePanel gamePanel = new GamePanel();
         add(gamePanel);
-        pack(); // Ajusta el tamaño de la ventana al contenido
+        // Ajusta el tamaño de la ventana al contenido del panel (usa el tamaño preferido definido en el panel).
+        pack();
 
-        // Centramos la ventana en la pantalla
+        // Centra la ventana en la pantalla.
         setLocationRelativeTo(null);
         setVisible(true);
 
-        // Aseguramos que el panel tenga el foco para capturar eventos
+        // Se asegura que el panel tenga el foco para poder capturar los eventos de teclado.
         gamePanel.requestFocusInWindow();
     }
 }

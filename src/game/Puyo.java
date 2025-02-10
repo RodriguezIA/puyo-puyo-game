@@ -4,105 +4,106 @@ import java.awt.Color;
 import java.util.Random;
 
 public class Puyo {
-    private int x1, y1;
-    private int x2, y2;
-    private int rotationState;
-    private final Color color1, color2;
+    // Posiciones de las dos esferas
+    public int x1, y1; // Primera esfera
+    public int x2, y2; // Segunda esfera
+    public int rotationState = 0; // 0: derecha, 1: abajo, 2: izquierda, 3: arriba
+    public Color color1, color2;
 
-    public Puyo(int x, int y, Color color){
+    public Puyo() {
+        // Posición inicial en la parte superior, centrado
         x1 = Constants.BOARD_WIDTH / 2 - 1;
         y1 = 0;
-
         x2 = Constants.BOARD_WIDTH / 2;
         y2 = 0;
-        rotationState = 0;
 
+        // Colores aleatorios para cada esfera
         Random rand = new Random();
         color1 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
         color2 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
     }
 
-    public int getX1() {
-        return x1;
-    }
-    public int getY1() {
-        return y1;
-    }
-    public int getX2() {
-        return x2;
-    }
-    public int getY2() {
-        return y2;
-    }
-    public Color getColor1() {
-        return color1;
-    }
-    public Color getColor2() {
-        return color2;
-    }
-
-    public void moveLeft(Board board) {
-        if(canMove(-1, board)){
-            x1--;
-            x2--;
-        }
-    }
-
-    public void moveRight(Board board) {
-        if(canMove(1, board)){
-            x1++;
-            x2++;
-        }
-    }
-
-    public void rotate(Board board){
-        int nextRotation = (rotationState + 1 ) % 4;
+    /**
+     * Rota el par de Puyos. Se debe pasar el tablero actual para verificar que la nueva
+     * posición sea válida.
+     *
+     * @param board El tablero del juego (arreglo bidimensional de Color)
+     */
+    public void rotate(Color[][] board) {
+        int nextRotation = (rotationState + 1) % 4;
         int newX2 = x1;
         int newY2 = y1;
 
         switch (nextRotation) {
-            case 0: newX2 = x1 + 1; break;
-            case 1: newY2 = y1 + 1; break;
-            case 2: newX2 = x1 - 1; break;
-            case 3: newY2 = y1 - 1; break;
+            case 0:
+                newX2 = x1 + 1;
+                newY2 = y1;
+                break;
+            case 1:
+                newX2 = x1;
+                newY2 = y1 + 1;
+                break;
+            case 2:
+                newX2 = x1 - 1;
+                newY2 = y1;
+                break;
+            case 3:
+                newX2 = x1;
+                newY2 = y1 - 1;
+                break;
         }
 
-        if(handleRotationCollisions(newX2, newY2, board)){
+        // Verificar si la rotación es válida
+        if (isValidPosition(newX2, newY2, board)) {
             x2 = newX2;
             y2 = newY2;
             rotationState = nextRotation;
         }
-    }
 
-    private boolean handleRotationCollisions(int newX2, int newY2, Board board){
-        if(newX2 >= Constants.BOARD_WIDTH){
-            if (board.isValidPosition(x1 - 1, y1) && board.isValidPosition(newX2 - 1, newY2)){
+        // Verificar si la rotación golpea el borde derecho del panel
+        if (newX2 >= Constants.BOARD_WIDTH) {
+            if (isValidPosition(x1 - 1, y1, board) && isValidPosition(newX2 - 1, newY2, board)) {
                 x1--;
-                return true;
+                x2 = newX2 - 1;
+                y2 = newY2;
+                rotationState = nextRotation;
+                return;
             }
-            return false;
         }
 
-        if(newX2 < 0){
-            if (board.isValidPosition(x1 + 1, y1) && board.isValidPosition(newX2 + 1, newY2)) {
+        // Verificar si la rotación golpea el borde izquierdo del panel
+        if (newX2 < 0) {
+            if (isValidPosition(x1 + 1, y1, board) && isValidPosition(newX2 + 1, newY2, board)) {
                 x1++;
-                return true;
+                x2 = newX2 + 1;
+                y2 = newY2;
+                rotationState = nextRotation;
+                return;
             }
-            return false;
         }
-        return board.isValidPosition(newX2, newY2);
+
+        // Si el puyo golpea el suelo u otro elemento, intentar subir
+        if (newY2 >= Constants.BOARD_HEIGHT || (newY2 >= 0 && board[newY2][newX2] != null)) {
+            if (y1 > 0 && isValidPosition(x1, y1 - 1, board) && isValidPosition(newX2, newY2 - 1, board)) {
+                y1--;
+                x2 = newX2;
+                y2 = newY2 - 1;
+                rotationState = nextRotation;
+            }
+        }
     }
 
-
-    private boolean canMove(int dx, Board board){
-        int newX1 = x1 + dx;
-        int newX2 = x2 + dx;
-
-        if(y1 != y2){
-            return y1 < y2 ?
-                    board.isValidPosition(newX1, y1) :
-                    board.isValidPosition(newX2, y2);
-        }
-        return board.isValidPosition(newX1, y1) && board.isValidPosition(newX2, y2);
+    /**
+     * Verifica si la posición (x, y) es válida en el tablero.
+     *
+     * @param x     La coordenada x
+     * @param y     La coordenada y
+     * @param board El tablero del juego
+     * @return true si la posición es válida; false en caso contrario
+     */
+    private boolean isValidPosition(int x, int y, Color[][] board) {
+        return x >= 0 && x < Constants.BOARD_WIDTH &&
+                y >= 0 && y < Constants.BOARD_HEIGHT &&
+                board[y][x] == null;
     }
 }

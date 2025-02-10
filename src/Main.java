@@ -2,9 +2,9 @@ import game.Frame;
 
 public class Main {
     public static void main(String[] args) {
-        // Iniciamos la GUI de forma segura en el hilo de eventos de Swing
+        // Esto asegura que todas las operaciones de la interfaz se ejecuten en el Event Dispatch Thread.
         javax.swing.SwingUtilities.invokeLater(() -> {
-            new Frame(); // Solo creamos la instancia del Frame
+            new Frame();
         });
     }
 }
