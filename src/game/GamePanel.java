@@ -225,13 +225,6 @@ public class GamePanel extends JPanel {
                 return;
             }
             if(!canFall1 && !canFall2){
-                if (isValidPosition(currentPair.x1, currentPair.y1) && board[currentPair.y1][currentPair.x1] == null) {
-                    board[currentPair.y1][currentPair.x1] = currentPair.color1;
-                }
-                if (isValidPosition(currentPair.x2, currentPair.y2) && board[currentPair.y2][currentPair.x2] == null) {
-                    board[currentPair.y2][currentPair.x2] = currentPair.color2;
-                }
-
                 placePuyo();
                 checkMatches();
                 currentPair = null;
@@ -249,12 +242,10 @@ public class GamePanel extends JPanel {
 
     private void placePuyo() {
         // Verificar que las posiciones son válidas antes de colocar
-        if (currentPair.y1 >= 0 && currentPair.y1 < BOARD_HEIGHT &&
-                currentPair.x1 >= 0 && currentPair.x1 < BOARD_WIDTH) {
+        if (isValidPosition(currentPair.x1, currentPair.y1) && board[currentPair.y1][currentPair.x1] == null) {
             board[currentPair.y1][currentPair.x1] = currentPair.color1;
         }
-        if (currentPair.y2 >= 0 && currentPair.y2 < BOARD_HEIGHT &&
-                currentPair.x2 >= 0 && currentPair.x2 < BOARD_WIDTH) {
+        if (isValidPosition(currentPair.x2, currentPair.y2) && board[currentPair.y2][currentPair.x2] == null) {
             board[currentPair.y2][currentPair.x2] = currentPair.color2;
         }
     }
