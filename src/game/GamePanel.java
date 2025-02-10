@@ -2,12 +2,12 @@ package game;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 public class GamePanel extends JPanel {
     private static final int BOARD_WIDTH = 6;
@@ -260,8 +260,75 @@ public class GamePanel extends JPanel {
     }
 
     private void checkMatches() {
-        // TODO: Implementar lógica de
         printBoard();
+        Set<Point> matchedPuyos = new HashSet<>();
+        boolean[][] visited = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
+
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                if (board[y][x] != null && !visited[y][x]) {
+                    Color currentColor = board[y][x];
+                    Set<Point> currentGroup = new HashSet<>();
+                    Queue<Point> queue = new LinkedList<>();
+                    queue.add(new Point(x, y));
+                    visited[y][x] = true;
+
+                    while (!queue.isEmpty()) {
+                        Point p = queue.poll();
+                        currentGroup.add(p);
+
+                        // Explorar en todas las direcciones (arriba, abajo, izquierda, derecha)
+                        // Arriba
+                        checkAdjacent(p.x, p.y - 1, currentColor, visited, queue);
+                        // Abajo
+                        checkAdjacent(p.x, p.y + 1, currentColor, visited, queue);
+                        // Izquierda
+                        checkAdjacent(p.x - 1, p.y, currentColor, visited, queue);
+                        // Derecha
+                        checkAdjacent(p.x + 1, p.y, currentColor, visited, queue);
+                    }
+
+                    if (currentGroup.size() >= 4) {
+                        matchedPuyos.addAll(currentGroup);
+                    }
+                }
+            }
+        }
+
+        // Eliminar Puyos coincidentes y aplicar gravedad
+        if (!matchedPuyos.isEmpty()) {
+            for (Point p : matchedPuyos) {
+                board[p.y][p.x] = null;
+            }
+            applyGravity();
+            checkMatches(); // Verificar nuevas coincidencias después de aplicar gravedad
+        }
+    }
+
+    private void checkAdjacent(int x, int y, Color targetColor, boolean[][] visited, Queue<Point> queue) {
+        if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
+            if (!visited[y][x] && board[y][x] == targetColor) {
+                visited[y][x] = true;
+                queue.add(new Point(x, y));
+            }
+        }
+    }
+
+    private void applyGravity() {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            int emptySpace = 0;
+            // Recorrer de abajo hacia arriba
+            for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
+                if (board[y][x] == null) {
+                    emptySpace++;
+                } else if (emptySpace > 0) {
+                    // Mover el Puyo hacia abajo
+                    board[y + emptySpace][x] = board[y][x];
+                    board[y][x] = null;
+                }
+            }
+        }
+        repaint();
     }
 
     private void printBoard() {
