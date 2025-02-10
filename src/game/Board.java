@@ -3,51 +3,45 @@ package game;
 
 
 import java.awt.*;
-import java.util.Random;
+
 
 public class Board {
-    private static final int COLUMNS = 6;
-    private static final int ROWS = 12;
-    private static final Color[] COLORS = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
-
-    private Sphere[][] board;
+    private final Color[][] grid;
 
     public Board(){
-        board = new Sphere[ROWS][COLUMNS];
+        grid = new Color[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
     }
 
-    public static int getCOLUMNS() {
-        return COLUMNS;
+    public Color getColorAt(int x, int y){
+        return grid[y][x];
     }
 
-    public static int getROWS() {
-        return ROWS;
+    public void setColorAt(int x, int y, Color color){
+        grid[y][x] = color;
     }
 
-    public boolean isCellEmpty(int row, int col){
-        return board[row][col] == null;
+    public boolean isValidPosition(int x, int y){
+        return x >= 0 && x < Constants.BOARD_WIDTH &&
+                y >= 0 && y < Constants.BOARD_HEIGHT &&
+                grid[y][x] == null;
     }
 
-    public void pleaceSphere(Sphere sphere){
-        board[sphere.getY()][sphere.getX()] = sphere;
+    public boolean canFall (int x, int y){
+        return y + 1 < Constants.BOARD_HEIGHT && grid[y + 1][x] == null;
     }
 
-    public Sphere[] generateSpherePair(){
-        Random random = new Random();
-        int col = random.nextInt(COLUMNS-1);
-        Color color1 = COLORS[random.nextInt(COLORS.length)];
-        Color color2 = COLORS[random.nextInt(COLORS.length)];
+    public void applyGravity(){
+        for(int x = 0; x < Constants.BOARD_WIDTH; x++){
+            int emptySpace = 0;
 
-        return new Sphere[]{
-                new Sphere(col, 0, color1),
-                new Sphere(col, 1,  color2)
-        };
-    }
-
-    public Sphere getSphere(int row, int col) {
-        if (row >= 0 && row < ROWS && col >= 0 && col < COLUMNS ){
-            return board[row][col];
+            for(int y = Constants.BOARD_HEIGHT - 1; y >= 0; y--){
+                if(grid[y][x] == null){
+                    emptySpace++;
+                } else if (emptySpace > 0){
+                    grid[y + emptySpace][x] = grid[y][x];
+                    grid[y][x] = null;
+                }
+            }
         }
-        return null;
     }
 }
