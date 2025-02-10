@@ -9,13 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+
 public class GamePanel extends JPanel {
-    private static final int BOARD_WIDTH = 6;
-    private static final int BOARD_HEIGHT = 12;
-    private static final int CELL_SIZE = 40;
 
     private Color[][] board;
-    private Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
     private Puyo currentPair;  // Declaración de currentPair
     private boolean gameOver;
     private Timer timer;
@@ -31,15 +28,15 @@ public class GamePanel extends JPanel {
 
         public Puyo() {
             // Start position at top center
-            x1 = BOARD_WIDTH / 2 - 1;
+            x1 = Constants.BOARD_WIDTH / 2 - 1;
             y1 = 0;
-            x2 = BOARD_WIDTH / 2;
+            x2 = Constants.BOARD_WIDTH / 2;
             y2 = 0;
 
             // Random colors
             Random rand = new Random();
-            color1 = colors[rand.nextInt(colors.length)];
-            color2 = colors[rand.nextInt(colors.length)];
+            color1 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
+            color2 = Constants.PUYO_COLORS[rand.nextInt(Constants.PUYO_COLORS.length)];
         }
 
         public void rotate() {
@@ -75,7 +72,7 @@ public class GamePanel extends JPanel {
             }
 
             // verificacion si la rotacion golpe la derecha del panel
-            if(newX2 >= BOARD_WIDTH){
+            if(newX2 >= Constants.BOARD_WIDTH){
                 if(isValidPosition(x1 - 1, y1) && isValidPosition(newX2 - 1, newY2 )){
                     x1--;
                     x2 = newX2 - 1;
@@ -97,7 +94,7 @@ public class GamePanel extends JPanel {
             }
 
             // si el puyo golpea el suelo u otro elemento intnetar subir
-            if (newY2 >= BOARD_HEIGHT || (newY2 >= 0 && board[newY2][newX2] != null)) {
+            if (newY2 >= Constants.BOARD_HEIGHT || (newY2 >= 0 && board[newY2][newX2] != null)) {
                 if (y1 > 0 && isValidPosition(x1, y1 - 1) && isValidPosition(newX2, newY2 - 1)) {
                     y1--;
                     x2 = newX2;
@@ -109,8 +106,8 @@ public class GamePanel extends JPanel {
     }
 
     public GamePanel() {
-        board = new Color[BOARD_HEIGHT][BOARD_WIDTH];
-        setPreferredSize(new Dimension(BOARD_WIDTH * CELL_SIZE, BOARD_HEIGHT * CELL_SIZE));
+        board = new Color[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
+        setPreferredSize(new Dimension(Constants.BOARD_WIDTH * Constants.CELL_SIZE, Constants.BOARD_HEIGHT * Constants.CELL_SIZE));
         setupGame();
         setupControls();
         loadImages();
@@ -130,7 +127,7 @@ public class GamePanel extends JPanel {
 
     private void setupGame() {
         gameOver = false;
-        board = new Color[BOARD_HEIGHT][BOARD_WIDTH];
+        board = new Color[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
         currentPair = null;
 
         timer = new Timer(1000, e -> {
@@ -182,15 +179,15 @@ public class GamePanel extends JPanel {
         if (currentPair.y1 != currentPair.y2) {
             if (currentPair.y1 < currentPair.y2) {
                 // La primera esfera está más arriba, solo mover esa
-                return newX1 >= 0 && newX1 < BOARD_WIDTH && board[currentPair.y1][newX1] == null;
+                return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH && board[currentPair.y1][newX1] == null;
             } else {
                 // La segunda esfera está más arriba, solo mover esa
-                return newX2 >= 0 && newX2 < BOARD_WIDTH && board[currentPair.y2][newX2] == null;
+                return newX2 >= 0 && newX2 < Constants.BOARD_WIDTH && board[currentPair.y2][newX2] == null;
             }
         }
 
         // Si están a la misma altura, verificar ambas
-        return newX1 >= 0 && newX1 < BOARD_WIDTH && newX2 >= 0 && newX2 < BOARD_WIDTH
+        return newX1 >= 0 && newX1 < Constants.BOARD_WIDTH && newX2 >= 0 && newX2 < Constants.BOARD_WIDTH
                 && board[currentPair.y1][newX1] == null
                 && board[currentPair.y2][newX2] == null;
     }
@@ -233,11 +230,11 @@ public class GamePanel extends JPanel {
     }
 
     private boolean canFall(int x, int y) {
-        return y + 1 < BOARD_HEIGHT && board[y + 1][x] == null;
+        return y + 1 < Constants.BOARD_HEIGHT && board[y + 1][x] == null;
     }
 
     private boolean isValidPosition(int x, int y) {
-        return x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT && board[y][x] == null;
+        return x >= 0 && x < Constants.BOARD_WIDTH && y >= 0 && y < Constants.BOARD_HEIGHT && board[y][x] == null;
     }
 
     private void placePuyo() {
@@ -253,10 +250,10 @@ public class GamePanel extends JPanel {
     private void checkMatches() {
         printBoard();
         Set<Point> matchedPuyos = new HashSet<>();
-        boolean[][] visited = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
+        boolean[][] visited = new boolean[Constants.BOARD_HEIGHT][Constants.BOARD_WIDTH];
 
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
-            for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
+            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
                 if (board[y][x] != null && !visited[y][x]) {
                     Color currentColor = board[y][x];
                     Set<Point> currentGroup = new HashSet<>();
@@ -297,7 +294,7 @@ public class GamePanel extends JPanel {
     }
 
     private void checkAdjacent(int x, int y, Color targetColor, boolean[][] visited, Queue<Point> queue) {
-        if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
+        if (x >= 0 && x < Constants.BOARD_WIDTH && y >= 0 && y < Constants.BOARD_HEIGHT) {
             if (!visited[y][x] && board[y][x] == targetColor) {
                 visited[y][x] = true;
                 queue.add(new Point(x, y));
@@ -306,10 +303,10 @@ public class GamePanel extends JPanel {
     }
 
     private void applyGravity() {
-        for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
             int emptySpace = 0;
             // Recorrer de abajo hacia arriba
-            for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
+            for (int y = Constants.BOARD_HEIGHT - 1; y >= 0; y--) {
                 if (board[y][x] == null) {
                     emptySpace++;
                 } else if (emptySpace > 0) {
@@ -324,8 +321,8 @@ public class GamePanel extends JPanel {
 
     private void printBoard() {
         System.out.println("Current Board State:");
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
-            for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
+            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
                 if (board[y][x] == null) {
                     System.out.print(" . ");
                 } else {
@@ -343,18 +340,18 @@ public class GamePanel extends JPanel {
         super.paintComponent(g);
 
         // Dibujar el tablero
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
-            for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < Constants.BOARD_HEIGHT; y++) {
+            for (int x = 0; x < Constants.BOARD_WIDTH; x++) {
                 g.setColor(Color.GRAY);
-                g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                g.drawRect(x * Constants.CELL_SIZE, y * Constants.CELL_SIZE, Constants.CELL_SIZE, Constants.CELL_SIZE);
 
                 if (board[y][x] != null) {
                     Image image = puyoImages.get(board[y][x]); // Obtener imagen por color
                     if (image != null) {
-                        g.drawImage(image, x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+                        g.drawImage(image, x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
                     } else {
                         g.setColor(board[y][x]);
-                        g.fillOval(x * CELL_SIZE + 2, y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                        g.fillOval(x * Constants.CELL_SIZE + 2, y * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
                     }
                 }
             }
@@ -364,18 +361,18 @@ public class GamePanel extends JPanel {
         if (currentPair != null) {
             Image image1 = puyoImages.get(currentPair.color1); // Obtener imagen por color
             if (image1 != null) {
-                g.drawImage(image1, currentPair.x1 * CELL_SIZE + 2, currentPair.y1 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+                g.drawImage(image1, currentPair.x1 * Constants.CELL_SIZE + 2, currentPair.y1 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
             } else {
                 g.setColor(currentPair.color1);
-                g.fillOval(currentPair.x1 * CELL_SIZE + 2, currentPair.y1 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                g.fillOval(currentPair.x1 * Constants.CELL_SIZE + 2, currentPair.y1 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
             }
 
             Image image2 = puyoImages.get(currentPair.color2); // Obtener imagen por color
             if (image2 != null) {
-                g.drawImage(image2, currentPair.x2 * CELL_SIZE + 2, currentPair.y2 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4, this);
+                g.drawImage(image2, currentPair.x2 * Constants.CELL_SIZE + 2, currentPair.y2 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4, this);
             } else {
                 g.setColor(currentPair.color2);
-                g.fillOval(currentPair.x2 * CELL_SIZE + 2, currentPair.y2 * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                g.fillOval(currentPair.x2 * Constants.CELL_SIZE + 2, currentPair.y2 * Constants.CELL_SIZE + 2, Constants.CELL_SIZE - 4, Constants.CELL_SIZE - 4);
             }
         }
 
